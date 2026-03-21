@@ -34,7 +34,11 @@
     border-radius: 20px;
     }
     
-    
+    #score-list li {
+    margin-bottom: 20px;
+    text-transform: capitalize;
+}
+
     .screen{
     position:relative;
     width:min(95vw,98vh*5/4);
@@ -385,6 +389,8 @@ function gopage1()  {
     document.getElementById("lastname").value = "";
     document.getElementById("grade").value = "";
 
+     userScore = 0;
+    
     if (webcam) {
         webcam.stop();
         webcam = null;
@@ -494,36 +500,45 @@ const firebaseConfig = {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-   async function saveScoreToFirestore(firstname, lastname, grade, score) {
+  async function saveScoreToFirestore(firstname, lastname, grade, score) {
+    // 1. Force everything to a standard format (Luis, Smith, 7-GOLD)
+    const cleanFirst = firstname.trim().charAt(0).toUpperCase() + firstname.trim().slice(1).toLowerCase();
+    const cleanLast = lastname.trim().charAt(0).toUpperCase() + lastname.trim().slice(1).toLowerCase();
+    const cleanGrade = grade.trim().toUpperCase(); // Grades are usually better in all caps
+    
     try {
         const leaderboardRef = db.collection("leaderboard_scores");
+        
+        // 2. SEARCH using the EXACT same clean variables used for saving
         const snapshot = await leaderboardRef
-            .where("firstname", "==", firstname)
-            .where("lastname", "==", lastname)
-            .where("grade", "==", grade)
+            .where("firstname", "==", cleanFirst)
+            .where("lastname", "==", cleanLast)
+            .where("grade", "==", cleanGrade)
             .get();
 
         if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            await doc.ref.update({
+            // 3. Document found! Update the first one found.
+            const docRef = snapshot.docs[0].ref; 
+            await docRef.update({
                 score: firebase.firestore.FieldValue.increment(score),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("code looking good king");
+            console.log("Updated score for: " + cleanFirst);
         } else {
+            // 4. No match found, create a new record
             await leaderboardRef.add({
-                firstname: firstname,
-                lastname: lastname,
-                grade: grade,
+                firstname: cleanFirst,
+                lastname: cleanLast,
+                grade: cleanGrade,
                 score: score,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("new name added");
+            console.log("Created new record for: " + cleanFirst);
         }
     } catch (error) {
+        // CHECK CONSOLE FOR THE INDEX LINK HERE
         console.error("Firebase Error:", error);
     }
-}
 
     async function displayLeaderboard() {
         const leaderboardContainer = document.getElementById("leaderboard-list");
@@ -555,9 +570,9 @@ const firebaseConfig = {
         document.getElementById("youaregood").style.display = "none";
         document.getElementById("leaderboard").style.display = "flex";
 
-        const firstname = document.getElementById("firstname").value.trim();
-        const lastname = document.getElementById("lastname").value.trim();
-        const grade = document.getElementById("grade").value.trim();
+        const firstname = document.getElementById("firstname").value.toLowerCase();
+        const lastname = document.getElementById("lastname").value.toLowerCase();
+        const grade = document.getElementById("grade").value.toLowerCase();
 
         if (firstname && lastname && grade) {
             await saveScoreToFirestore(firstname, lastname, grade, userScore);
