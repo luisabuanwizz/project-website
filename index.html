@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+    body{
+    margin:0;
+    background:#368b2e;
+    }
+        
+    #page1,#page2,#page3,#page4,#good,#wrong,#youaregood,#youarewrong,#leaderboard {
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    }
+    
+    #leaderboard-content {
+    position: absolute; 
+    top: 0%; 
+    left: 13%; 
+    width: 70%; 
+    height: 80%; 
+    color: black; 
+    font-family: 'Press Start 2P'; 
+    font-size: 35px; 
+    overflow-y: auto;
+    background-color:#c2ec66;
+    border-radius: 20px;
+    }
+    
+    
+    .screen{
+    position:relative;
+    width:min(95vw,98vh*5/4);
+    aspect-ratio:5/4;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    margin:auto;
+    }
+
+    .page1bg{background-image:url(https://i.imgur.com/WEIwexz.jpeg);}
+    .page2bg{background-image:url(https://i.imgur.com/oQmvqsB.jpeg);}
+    .page3bg{background-image:url(https://i.imgur.com/SlTadPN.jpeg);}
+    .page4bg{background-image:url(https://i.imgur.com/Uz7vHc2.jpeg);}
+    .goodpg{background-image:url(https://i.imgur.com/qRMRPeF.jpeg);}
+    .wrongpg{background-image:url(https://i.imgur.com/Au3olRn.jpeg);}
+    .youarecorrectpg{background-image:url(https://i.imgur.com/qk947Jj.png);}  
+    .youarewrongpg{background-image:url(https://i.imgur.com/po2UDou.png);}
+    .leaderboardbg{background-image:url(https://i.imgur.com/16COmjV.jpeg);} 
+    
+    /*goes from title screen to 3 input boxes page1-page2*/
+    .pixel-button {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 30%;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        }
+
+    /*format for all 3 boxes on page2*/
+    .input-box {
+         position: absolute;
+        width: 150px;
+        height: 230px;
+        background: transparent;
+        border: none;
+        color: black;       
+        font-size: 120%;
+        font-family:"Press Start 2P";
+        text-align: center;
+            
+        }
+    .first-name{
+     top: 31%;
+    left: 13.5%;
+    width: 21%;
+    height: 22%;
+    }
+    .second-name{
+    top: 31%;
+    left: 58.5%;
+    width: 21%;
+    height: 22%;
+    }
+    .grade{
+    top: 63%;
+    left: 39.5%;
+    width: 21%;
+    height: 20%;
+    }
+    .grade::placeholder{color:black;}
+
+     /*goes from the input boxes to the cam page page2-page3*/
+     .page2-button {
+      position: absolute;
+      cursor: pointer;
+      left: 39.5%;
+      top: 85%;
+      width: 23%;
+      height: 13%;
+      background-color: #89d060;
+      font-size: 120%;
+      font-family: "Press Start 2P";
+     }  
+        
+    /*starts the camera in cam page page3*/
+    .scan-button {
+     position: absolute;
+     top: 40%;
+     left: 55%;
+     width:	30%;
+     height:20%;
+     cursor: pointer;
+     background-color:#8fde5e;
+     font-family: "Press Start 2P";
+     font-size:220%;
+     box-shadow: gray;
+     z-index:1;
+    }
+        
+    /*stops the cam, continues to page 4*/
+    .lock-button{
+    position: absolute;
+    top: 87%;
+     left: 4%;
+     width:	25%;
+     height:10%;
+     cursor: pointer;
+    background-color:#8fde5e;
+     font-family: "Press Start 2P";
+     font-size:120%;
+     box-shadow: gray;
+    }
+    
+    .page3-instruct1{
+    position: absolute;
+    top: 59%;
+     left: 55%;
+    font-family: "Press Start 2P";
+   font-size: 100%;
+    }
+   .page3-instruct2{
+   position: absolute;
+    top: 93%;
+     left: 4%;
+   font-family: "Press Start 2P";
+   font-size: 100%;
+       
+   }
+    
+  /*formats the cam*/
+  #webcam-container {
+  position: absolute;
+  top: 9.9%;
+  left: 39.1%;
+  width: 60.7%;
+  height: 80%;
+  line-height: 0;
+    }
+        
+  #webcam-container canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+    }
+     
+    
+  .choice-button { position: absolute; background: transparent; border: none; cursor: pointer; outline: none; }
+  .re-btn { top: 33%; left: 14%; width: 32%; height: 52%; }
+  .non-btn { top: 33%; left: 54%; width: 32%; height: 52%; }
+
+    /*continue button on wrong and good pages*/
+    .c-w{
+    top: 87%;
+     left: 4%;
+     width:	25%;
+     height:10%;
+     cursor: pointer;
+    background-color:#8fde5e;
+     font-family: "Press Start 2P";
+     font-size:15px;
+     box-shadow: gray;
+     }
+    
+    /*returns you back to the scanner*/
+    .backtoscanner{
+     position: absolute;
+     cursor: pointer;
+    background-color:#8fde5e;
+     font-family: "Press Start 2P";
+     font-size:120%;
+     box-shadow: gray;
+     top: 90%;
+     left: 70%;
+     width:	30%;
+     height:10%;
+    }
+   
+   /*button that leads you to the leaderboard*/
+    .leaderboard {
+    position: absolute;
+     cursor: pointer;
+    background-color:#8fde5e;
+     font-family: "Press Start 2P";
+     font-size:17px;
+     box-shadow: gray;
+     top: 0%;
+     left: 65%;
+     width:	35%;
+     height:10%;
+    }
+    
+    #score-list li {
+    margin-bottom: 20px;
+    }
+    
+    .btpage1 {
+    position: absolute;
+    cursor: pointer;
+    background-color:#8fde5e;
+    font-family: "Press Start 2P";
+    font-size:120%;
+    box-shadow: gray;
+    top: 90%;
+    left: 70%;
+    width:30%;
+    height:10%;
+    z-index:1;
+    }
+    
+    
+    </style>
+</head>
+<body>
+    <!--page 1-->
+    <div id="page1">
+    <div class="screen page1bg">
+    <button class= "pixel-button" onclick="gopage2()"></button>
+    </div>
+        </div>
+ 
+ <!--page 2-->
+<div id="page2" style="display:none;">
+ <div class="screen page2bg">
+        <input id="firstname"class="input-box first-name">
+        <input id="lastname"class="input-box second-name">
+        <input id="grade" class="input-box grade" placeholder="exp.7-Gold">
+        <button class="page2-button" onclick="gopage3()">Continue</button>
+    </div>
+      </div>
+ 
+ <!--page 3-->
+ <div id="page3" style="display:none;">
+ <div class="screen page3bg">
+
+<h5 class="page3-instruct1">press this first!</h5>
+<h6 class="page3-instruct2">press this when youre done scanning!</h6>
+
+<button class="scan-button" onclick="init()">START TO SCAN</button>
+<button class="lock-button" onclick="gopage4()">LOCK IN SCAN</button>
+
+<div id="webcam-container"></div>
+</div>
+</div>
+<script type="text/javascript">
+
+    const URL = "https://teachablemachine.withgoogle.com/models/Csvepl_XE/";
+
+    let model, webcam,maxPredictions;
+    let currentWinner = "";
+    let capturedResult = ""; 
+    let userScore = 0;
+
+    async function init() {
+        document.getElementById("webcam-container").innerHTML = "";
+        document.querySelector(".scan-button").style.display = "none";
+        if(document.querySelector(".page3-instruct1")) {
+            document.querySelector(".page3-instruct1").style.display = "none";
+        }
+
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        if (!model) {
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+}
+
+        const flip = true; 
+        webcam = new tmImage.Webcam(500, 500, flip);
+        await webcam.setup(); 
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+    }
+
+    async function loop() {
+        webcam.update(); 
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        let high = 0;
+
+        for (let i = 0; i < maxPredictions; i++) {
+            let val = prediction[i].probability;
+            if (val > high) {
+                high = val;
+                currentWinner = prediction[i].className;
+            }
+        }
+    }
+</script>
+
+<!--page 4-->
+<div id="page4" style="display:none;">
+<div class="screen page4bg">
+<button class="choice-button re-btn" onclick="evaluateGuess(true)"></button>
+<button class="choice-button non-btn" onclick="evaluateGuess(false)"></button>
+  </div>
+    </div>
+
+<!--correct/good-->
+<div id="good" style="display:none;">
+<div class="screen goodpg">
+<button class="c-w" onclick="gogood()">continue?</button>
+<button class="backtoscanner" onclick="goback()">go back to scanner?</button>  
+  </div>
+    </div>
+
+<!--bad/wrong-->
+<div id="wrong" style="display:none;">
+<div class="screen wrongpg">
+<button class="c-w" onclick="gobad()">continue?</button>
+<button class="backtoscanner" onclick="goback()">go back to scanner?</button> 
+ </div>
+  </div>
+
+<!--you are good page-->
+<div id="youaregood" style="display:none;">
+<div class="screen youarecorrectpg">
+  <button class="leaderboard" onclick="leaderboard()">see the leaderboards?</button> 
+  </div>
+   </div>
+
+
+<!--you are wrong page-->
+<div id="youarewrong" style="display:none;">
+<div class="screen youarewrongpg">
+ <button class="leaderboard" onclick="leaderboard()">see the leaderboards?</button>
+  </div>
+   </div>
+
+<!--leaderboard-->
+<div id="leaderboard" style="display:none;">
+    <div class="screen leaderboardbg">
+    <div id="leaderboard-content">
+    <button class="btpage1"onclick="gopage1()">reset?</button>
+ </div>
+    </div>
+        </div>
+
+<script>
+function gopage1()  {   
+document.getElementById("page1").style.display = "flex";
+document.getElementById("leaderboard").style.display = "none";
+}
+</script>
+<script>
+function gopage2() {
+document.getElementById("page1").style.display = "none";
+document.getElementById("page2").style.display = "flex";
+}
+</script>
+<script>
+function gopage3() {
+
+    let firstname = document.getElementById("firstname").value.trim();
+    let lastname = document.getElementById("lastname").value.trim();
+    let grade = document.getElementById("grade").value.trim();
+
+    if(firstname === "" || lastname === "" || grade === ""){
+        alert("Please fill the boxes before continuing!");
+        return;
+}
+    document.getElementById("page2").style.display = "none";
+    document.getElementById("page3").style.display = "flex";
+}
+</script>
+<script>
+function gopage4() {
+        capturedResult = currentWinner; 
+        
+        if (webcam) {
+            webcam.stop();
+        }
+
+        document.getElementById("page3").style.display = "none";
+        document.getElementById("page4").style.display = "flex";
+}
+</script>
+<script>
+function evaluateGuess(isBioGuess) {
+
+    const recyclableItems = ["Recyclable"]; 
+    const actualIsRecyclable = recyclableItems.includes(capturedResult);
+
+    document.getElementById("page4").style.display = "none";
+
+    if (isBioGuess === actualIsRecyclable) {
+        userScore = +1;
+        document.getElementById("good").style.display = "flex";
+        alert("+1 point!");    
+        }
+    else {
+        userScore = -1;
+        document.getElementById("wrong").style.display = "flex";
+        alert("-1 point!")
+    }
+}
+</script>
+<script>
+function gogood(){
+    document.getElementById("good").style.display = "none";
+    document.getElementById("youaregood").style.display = "flex";
+    }
+
+
+function gobad(){
+    document.getElementById("wrong").style.display = "none";
+    document.getElementById("youarewrong").style.display = "flex";
+}
+</script>
+<script>
+function goback(){
+    document.getElementById("good").style.display = "none";
+    document.getElementById("wrong").style.display = "none";
+    document.getElementById("page3").style.display = "flex";
+    document.querySelector(".scan-button").style.display = "flex";
+    init();
+}    
+</script>
+<script>
+const firebaseConfig = {
+      apiKey: "AIzaSyCEL5JH-xih3L_2WQm-pm_ic4BfIVySGgE",
+      authDomain: "stem-fair-97ce0.firebaseapp.com",
+      projectId: "stem-fair-97ce0",
+      storageBucket: "stem-fair-97ce0.appspot.com",
+      messagingSenderId: "67030962873",
+      appId: "1:67030962873:web:654553b4e9e262deb7c168",
+      measurementId: "G-909PD6WE99"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+   async function saveScoreToFirestore(firstname, lastname, grade, score) {
+    try {
+        const leaderboardRef = db.collection("leaderboard_scores");
+        const snapshot = await leaderboardRef
+            .where("firstname", "==", firstname)
+            .where("lastname", "==", lastname)
+            .where("grade", "==", grade)
+            .get();
+
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            await doc.ref.update({
+                score: firebase.firestore.FieldValue.increment(score),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("code looking good king");
+        } else {
+            await leaderboardRef.add({
+                firstname: firstname,
+                lastname: lastname,
+                grade: grade,
+                score: score,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("new name added");
+        }
+    } catch (error) {
+        console.error("Firebase Error:", error);
+    }
+}
+
+    async function displayLeaderboard() {
+        const leaderboardContainer = document.getElementById("leaderboard-content");
+        leaderboardContainer.innerHTML = '<h2>Top 10</h2><ol id="score-list"></ol>';
+        const scoreList = document.getElementById("score-list");
+
+
+        try {
+            const snapshot = await db.collection("leaderboard_scores")
+                                   .orderBy("score", "desc")
+                                   .limit(10)
+                                   .get();
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const listItem = document.createElement('li');
+                listItem.textContent = `${data.firstname} ${data.lastname} (${data.grade}): ${data.score} points`;
+                scoreList.appendChild(listItem);
+            });
+
+        } catch (error) {
+            console.error("Error fetching leaderboard: ", error);
+            leaderboardContainer.innerHTML += '<p>Error loading leaderboard. Please try again later.</p>';
+        }
+    }
+
+    async function leaderboard(){
+        document.getElementById("youarewrong").style.display = "none";
+        document.getElementById("youaregood").style.display = "none";
+        document.getElementById("leaderboard").style.display = "flex";
+
+        const firstname = document.getElementById("firstname").value.trim();
+        const lastname = document.getElementById("lastname").value.trim();
+        const grade = document.getElementById("grade").value.trim();
+
+        if (firstname && lastname && grade) {
+            await saveScoreToFirestore(firstname, lastname, grade, userScore);
+        } else {
+            console.warn("Player details missing (First Name, Last Name, or Grade is empty), score not saved to Firestore.");
+              userScore = 0;
+        }
+
+      
+        displayLeaderboard();
+    }    
+</script>
+</body>
+</html>
