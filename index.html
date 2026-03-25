@@ -114,7 +114,7 @@
       font-family: "Press Start 2P";
      }  
         
-    /*starts the camera in cam page3*/
+    /*starts the camera in cam page page3*/
     .scan-button {
      position: absolute;
      top: 40%;
@@ -368,37 +368,24 @@
 <div id="leaderboard" style="display:none;">
     <div class="screen leaderboardbg">
     <div id="leaderboard-content">
-      <button class="btpage1" onclick="gopage1()">reset?</button>
-      <div id="leaderboard-list">
-        <h2>Top 10</h2>
-        <ol id="score-list"></ol>
-      </div>
-    </div>
+    <button class="btpage1"onclick="gopage1()">reset?</button>
+ </div>
     </div>
         </div>
 
 <script>
 function gopage1()  {   
-    document.getElementById("page1").style.display = "flex";
-    document.getElementById("leaderboard").style.display = "none";
-    document.getElementById("firstname").value = "";
+userScore = 0;
+document.getElementById("page1").style.display = "flex";
+document.getElementById("leaderboard").style.display = "none";
+document.getElementById("firstname").value = "";
     document.getElementById("lastname").value = "";
-    document.getElementById("grade").value = "";
-
-    if (webcam) {
-        webcam.stop();
-        webcam = null;
-    }
-    
-    const webcamContainer = document.getElementById("webcam-container");
-    if (webcamContainer) {
-        webcamContainer.innerHTML = "";
-    }
-
+    document.getElementById("grade").value = "";    
 }
 </script>
 <script>
 function gopage2() {
+userScore = 0;
 document.getElementById("page1").style.display = "none";
 document.getElementById("page2").style.display = "flex";
 }
@@ -419,24 +406,15 @@ function gopage3() {
 }
 </script>
 <script>
-async function gopage4() {
+function gopage4() {
         capturedResult = currentWinner; 
         
         if (webcam) {
-            await webcam.stop();
-            webcam = null;
+            webcam.stop();
         }
 
-        const webcamContainer = document.getElementById("webcam-container");
-        if (webcamContainer) {
-            webcamContainer.innerHTML = "";
-    }
-        
         document.getElementById("page3").style.display = "none";
         document.getElementById("page4").style.display = "flex";
-
-
-        document.querySelector(".scan-button").style.display = "";
 }
 </script>
 <script>
@@ -448,12 +426,12 @@ function evaluateGuess(isBioGuess) {
     document.getElementById("page4").style.display = "none";
 
     if (isBioGuess === actualIsRecyclable) {
-        userScore = +1;
+        userScore += 1;
         document.getElementById("good").style.display = "flex";
         alert("+1 point!");    
         }
     else {
-        userScore = -1;
+        userScore -= 1;
         document.getElementById("wrong").style.display = "flex";
         alert("-1 point!")
     }
@@ -526,8 +504,8 @@ const firebaseConfig = {
 }
 
     async function displayLeaderboard() {
-        const leaderboardContainer = document.getElementById("leaderboard-list");
-        leaderboardContainer.innerHTML = '<h2>Top 10</h2><ol id="score-list"></ol><button class="btpage1" onclick="gopage1()">reset?</button>';
+        const leaderboardContainer = document.getElementById("leaderboard-content");
+        leaderboardContainer.innerHTML = '<h2>Top 10</h2><ol id="score-list"></ol>';
         const scoreList = document.getElementById("score-list");
 
 
