@@ -133,22 +133,22 @@
     .lock-button{
     position: absolute;
     top: 87%;
-     left: 4%;
-     width:	25%;
-     height:10%;
-     cursor: pointer;
+    left: 4%;
+    width:	25%;
+    height:10%;
+    cursor: pointer;
     background-color:#8fde5e;
-     font-family: "Press Start 2P";
-     font-size:120%;
-     box-shadow: gray;
+    font-family: "Press Start 2P";
+    font-size:120%;
+    box-shadow: gray;
     }
     
     .page3-instruct1{
     position: absolute;
     top: 59%;
-     left: 55%;
+    left: 55%;
     font-family: "Press Start 2P";
-   font-size: 100%;
+    font-size: 100%;
     }
    .page3-instruct2{
    position: absolute;
@@ -268,7 +268,7 @@
 <h6 class="page3-instruct2">press this when youre done scanning!</h6>
 
 <button class="scan-button" onclick="init()">START TO SCAN</button>
-<button class="lock-button" onclick="gopage4()">LOCK IN SCAN</button>
+<button class="lock-button" id="lockBtn" onclick="gopage4()">LOCK IN SCAN</button>
 
 <div id="webcam-container"></div>
 </div>
@@ -281,6 +281,7 @@
     let currentWinner = "";
     let capturedResult = ""; 
     let userScore = 0;
+    let scanStarted = false;
 
     async function init() {
         document.getElementById("webcam-container").innerHTML = "";
@@ -288,9 +289,11 @@
         if(document.querySelector(".page3-instruct1")) {
             document.querySelector(".page3-instruct1").style.display = "none";
         }
+        
+        scanStarted = true;
 
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
 
         if (!model) {
     model = await tmImage.load(modelURL, metadataURL);
@@ -374,13 +377,21 @@
 
 
 <script>
+function formatInput(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+</script>
+<script>
 function gopage1()  {   
 userScore = 0;
 document.getElementById("page1").style.display = "flex";
+document.querySelector(".scan-button").style.display = "block";
 document.getElementById("leaderboard").style.display = "none";
 document.getElementById("firstname").value = "";
-    document.getElementById("lastname").value = "";
-    document.getElementById("grade").value = "";    
+document.getElementById("lastname").value = "";
+document.getElementById("grade").value = "";    
+document.getElementById("webcam-container").innerHTML = "";
+scanStarted = false;
 }
 </script>
 <script>
@@ -392,16 +403,19 @@ document.getElementById("page2").style.display = "flex";
 </script>
 <script>
 function gopage3() {
-
-    let firstname = document.getElementById("firstname").value.trim();
-    let lastname = document.getElementById("lastname").value.trim();
-    let grade = document.getElementById("grade").value.trim();
+    let firstname = formatInput(document.getElementById("firstname").value.trim());
+    let lastname = formatInput(document.getElementById("lastname").value.trim());
+    let grade = formatInput(document.getElementById("grade").value.trim());
 
     if(firstname === "" || lastname === "" || grade === ""){
         alert("Please fill the boxes before continuing!");
         return;
 }
- userScore += 5;
+ document.getElementById("firstname").value = firstname;
+    document.getElementById("lastname").value = lastname;
+    document.getElementById("grade").value = grade;
+
+    userScore += 5;
     alert("Thanks for answering! +5 points :)");
     
     document.getElementById("page2").style.display = "none";
@@ -410,7 +424,11 @@ function gopage3() {
 </script>
 <script>
 function gopage4() {
-        capturedResult = currentWinner; 
+    if (!scanStarted) {
+        alert("Please scan first!");
+        return;
+    }    
+    capturedResult = currentWinner; 
         
         if (webcam) {
             webcam.stop();
@@ -458,6 +476,7 @@ function goback(){
     document.getElementById("wrong").style.display = "none";
     document.getElementById("page3").style.display = "flex";
     document.querySelector(".scan-button").style.display = "flex";
+    scanStarted = false;
     init();
 }    
 </script>
