@@ -405,7 +405,11 @@ document.getElementById("page2").style.display = "flex";
 function gopage3() {
     let firstname = formatInput(document.getElementById("firstname").value.trim());
     let lastname = formatInput(document.getElementById("lastname").value.trim());
-    let grade = formatInput(document.getElementById("grade").value.trim());
+    let grade = document.getElementById("grade").value.trim();
+    grade = grade.split('-').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join('-');
+
 
     if(firstname === "" || lastname === "" || grade === ""){
         alert("Please fill the boxes before continuing!");
